@@ -104,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
-                    height: 64,
+                    height: 72,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: _days.length,
@@ -120,16 +120,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            width: 66,
+                            width: 60,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 10,
+                              horizontal: 12,
+                              vertical: 6,
                             ),
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? AppColors.primary
                                   : AppColors.surface,
-                              borderRadius: BorderRadius.circular(32),
+                              borderRadius: BorderRadius.circular(26),
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
@@ -140,35 +140,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ]
                                   : null,
                             ),
-                            child: Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    DateFormat('E', 'es')
-                                        .format(date)
-                                        .toUpperCase(),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: isSelected
-                                          ? Colors.white
-                                          : AppColors.darkText,
-                                    ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  DateFormat('E', 'es')
+                                      .format(date)
+                                      .toUpperCase(),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : AppColors.darkText,
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    date.day.toString().padLeft(2, '0'),
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      color: isSelected
-                                          ? Colors.white
-                                          : AppColors.darkText,
-                                    ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  date.day.toString().padLeft(2, '0'),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : AppColors.darkText,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         );

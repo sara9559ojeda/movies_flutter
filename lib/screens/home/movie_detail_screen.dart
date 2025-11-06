@@ -18,6 +18,174 @@ class MovieDetailScreen extends StatefulWidget {
   State<MovieDetailScreen> createState() => _MovieDetailScreenState();
 }
 
+class _MovieDetailScreenState extends State<MovieDetailScreen> {
+  MovieDetail? _detail;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDetail();
+  }
+
+  Future<void> _loadDetail() async {
+    final detail = await context.read<MovieNotifier>().loadMovieDetail(
+          widget.movie.id,
+        );
+    if (!mounted) return;
+    setState(() {
+      _detail = detail;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final detail = _detail;
+    final posterUrl = detail?.backdropUrl ?? widget.movie.backdropUrl;
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 400,
+            pinned: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(36),
+                    ),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (posterUrl != null)
+                          CachedNetworkImage(
+                            imageUrl: posterUrl,
+                            fit: BoxFit.cover,
+                          )
+                        else
+                          Container(color: Colors.black26),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              stops: const [0.4, 0.75, 1],
+                              colors: [
+                                Colors.black.withOpacity(0.08),
+                                Colors.black.withOpacity(0.3),
+                                Colors.white,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : detail == null
+                    ? const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text(
+                          'No encontramos informacion de esta pelicula.',
+                        ),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Transform.translate(
+                            offset: const Offset(0, -140),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              child: Material(
+                                elevation: 12,
+                                shadowColor: Colors.black26,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(28),
+                                ),
+                                child: _MovieInfoCard(detail: detail),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Plot Summary',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.darkText,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  detail.overview.isNotEmpty
+                                      ? detail.overview
+                                      : 'Sinopsis proximamente.',
+                                  style: const TextStyle(
+                                    height: 1.5,
+                                    color: AppColors.lightText,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: detail.genres
+                                      .map(
+                                        (genre) => Chip(label: Text(genre)),
+                                      )
+                                      .toList(),
+                                ),
+                                const SizedBox(height: 32),
+                                const Text(
+                                  'Cast',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.darkText,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  height: 120,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: detail.cast.length,
+                                    separatorBuilder: (_, __) =>
+                                        const SizedBox(width: 16),
+                                    itemBuilder: (context, index) {
+                                      final cast = detail.cast[index];
+                                      return CastAvatar(cast: cast);
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 32),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MovieInfoCard extends StatelessWidget {
   const _MovieInfoCard({required this.detail});
 
@@ -37,13 +205,6 @@ class _MovieInfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 32,
-            offset: const Offset(0, 18),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,8 +221,10 @@ class _MovieInfoCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFE7C7),
                   borderRadius: BorderRadius.circular(18),
@@ -82,8 +245,10 @@ class _MovieInfoCard extends StatelessWidget {
               ),
               const Spacer(),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE5C558),
                   borderRadius: BorderRadius.circular(18),
@@ -107,13 +272,21 @@ class _MovieInfoCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Expanded(child: _InfoTile(label: 'Year', value: year)),
+                Expanded(
+                  child: _InfoTile(label: 'Year', value: year),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _InfoTile(label: 'Type', value: type)),
+                Expanded(
+                  child: _InfoTile(label: 'Type', value: type),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _InfoTile(label: 'Hour', value: runtime)),
+                Expanded(
+                  child: _InfoTile(label: 'Hour', value: runtime),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _InfoTile(label: 'Director', value: director)),
+                Expanded(
+                  child: _InfoTile(label: 'Director', value: director),
+                ),
               ],
             ),
           ),
@@ -167,136 +340,4 @@ String _formatRuntime(int? minutes) {
     return '${hours}h';
   }
   return '${hours}h ${mins}m';
-}
-
-class _MovieDetailScreenState extends State<MovieDetailScreen> {
-  MovieDetail? _detail;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDetail();
-  }
-
-  Future<void> _loadDetail() async {
-    final detail =
-        await context.read<MovieNotifier>().loadMovieDetail(widget.movie.id);
-    if (!mounted) return;
-    setState(() {
-      _detail = detail;
-      _isLoading = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final detail = _detail;
-    final posterUrl = detail?.backdropUrl ?? widget.movie.backdropUrl;
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 360,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (posterUrl != null)
-                    CachedNetworkImage(
-                      imageUrl: posterUrl,
-                      fit: BoxFit.cover,
-                    )
-                  else
-                    Container(color: Colors.black26),
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black87,
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              title: Text(widget.movie.title),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : detail == null
-                      ? const Text('No encontramos informacion de esta pelicula.')
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 12),
-                            Transform.translate(
-                              offset: const Offset(0, -80),
-                              child: _MovieInfoCard(detail: detail),
-                            ),
-                            const SizedBox(height: 24),
-                            const Text(
-                              'Plot Summary',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.darkText,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              detail.overview.isNotEmpty
-                                  ? detail.overview
-                                  : 'Sinopsis proximamente.',
-                              style: const TextStyle(
-                                height: 1.5,
-                                color: AppColors.lightText,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: detail.genres
-                                  .map((genre) => Chip(label: Text(genre)))
-                                  .toList(),
-                            ),
-                            const SizedBox(height: 24),
-                            const Text(
-                              'Cast',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.darkText,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              height: 120,
-                              child: ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: detail.cast.length,
-                                separatorBuilder: (_, __) => const SizedBox(width: 16),
-                                itemBuilder: (context, index) {
-                                  final cast = detail.cast[index];
-                                  return CastAvatar(cast: cast);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
